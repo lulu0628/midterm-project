@@ -1,0 +1,128 @@
+---
+title: "MA615/415 Midterm Project"
+subtitle: "County-level oil and gas production"
+author: "Chenlu Liu"
+output: pdf_document
+header-includes: \usepackage{float}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Set Up: Packages and Functions
+
+We will need to use the following packages: `"stringr"`, `"ggplot2"`, and
+`"dplyr"`. install them first (outside this Rmd).
+
+install.packages(`"stringr"`)
+
+install.packages(`"ggplot2"`)
+
+install.packages(`"dplyr"`)
+
+```{r}
+# use this code chunk to load all the packages that you will be using
+library(dplyr)
+library(plyr)
+library(ggplot2)
+# (do not include commands to install the packages)
+```
+
+
+
+# Import Raw Data in R
+
+I already downloaded a copy of the CSV files with the
+raw data : 
+
+- `oilgascounty.csv`
+
+
+Now, use one of the reading table functions to import the data sets in R. 
+Do NOT convert strings into factors.
+
+```{r}
+
+
+# read in oilgascounty.csv
+oilgascounty = read.csv("D:\\midterm\\oilgascounty.csv", stringsAsFactors = FALSE)
+
+# check structure with str()
+
+str(oilgascounty)
+
+```
+__FIPS__:  Five digit Federal Information Processing Standard (FIPS) code (numeric)
+
+__geoid__:  FIPS code with leading zero (string)
+
+__Stabr__:	State abbreviation (string)
+
+__County_Name__:  County name (string)
+
+__Rural_Urban_Continuum_Code_2013__:	Rural-urban Continuum Code 2013 (see code descriptions)
+
+__Urban_Influence_2013__:	Urban Influence Code, 2013 (see code descriptions)
+
+__Metro_Nonmetro_2013__:	Metro-nonmetro 2013 (0=nonmetro, 1=metro)
+
+__Metro_Micro_Noncore_2013__:	Metro-Micro-Noncore Indicator 2013 (0=nonmetro noncore, 1=nonmetro micropolitan, 2=metropolitan)
+
+__oil2000__, __oil2001__, ..., __oil2011__:	Annual gross withdrawals (barrels) of crude oil, for the year specified in the variable name
+
+__gas2000__, __gas2001__, ..., __gas2011__:	Annual gross withdrawals (thousand cubic feet) of natural gas, for the year specified in the variable name
+
+__oil_change_group__:	Categorical variable based upon change in the dollar value of oil production, 2000-11. Values are H_Growth (>=$20 million),H_ Decline (<=-$20 million), Status Quo (change between +/- $20 million)
+
+__gas_change_group__:	Categorical variable based upon change in the dollar value of natural gas production, 2000-11. Values are H_Growth (>=$20 million), H_Decline (<=-$20 million), Status Quo (change between +/- $20 million)
+
+__oil_gas_change_group__:	Categorical variable based on the change in the dollar value of the sum of oil and natural gas production, 2000-11. Values are H_Growth (>=$20 million),H_ Decline (<=-$20 million), Status Quo (change between +/- $20 million)
+
+# Cleaning raw data of County-level oil and gas production
+First, we  summary the data 
+```{r}
+summary(oilgascounty)
+```
+then we
+count
+the number of __oil_gas_change_group__ in each  (__Metro_Nonmetro_2013__) with the tidy __count__ function.
+```{r}
+count(oilgascounty, c("Metro_Nonmetro_2013", "oil_gas_change_group"))
+
+
+```
+count
+the number of __oil_gas_change_group__ in each  (__Metro_Micro_Noncore_2013__) with the tidy __count__ function.
+```{r}
+
+count(oilgascounty, c("Metro_Micro_Noncore_2013", "oil_gas_change_group"))
+
+
+```
+Then we remove missing (and hence uninformative for our purpose) values with subset.
+```{r}
+oil_group2 <- subset(oilgascounty,  oil2000>0&oil2001>0&oil2002>0&oil2003>0&oil2004>0&oil2005>0
+                                &oil2006>0&oil2007>0&oil2008>0&oil2009>0&oil2010>0&oil2011>0)
+
+oil_group3=apply(oil_group2[,9:20],2,sum)
+new_data=data.frame(time=2000:2011,stype=rep("oil",12),prudction=as.numeric(oil_group3))
+gas_group2 <- subset(oilgascounty,  gas2000>0&gas2001>0&gas2002>0&gas2003>0&gas2004>0&gas2005>0
+                                &gas2006>0&gas2007>0&gas2008>0&gas2009>0&gas2010>0&gas2011>0)
+gas_group3=apply(gas_group2[,9:20],2,sum)
+new_data=rbind(new_data,data.frame(time=2000:2011,stype=rep("gas",12),prudction=as.numeric(gas_group3)))
+
+
+```
+
+# Data Visualization
+
+Use the `records` data frame, and functions in `"ggplot2"`, to create charts 
+similar to those displayed in the PDF with the instructions for this project:
+
+```{r}
+qplot(time,prudction,  data = new_data, geom=c("line","point"),
+      main="oil and gas Tidy Data ",colour = stype)
+      
+  ```    
+      
